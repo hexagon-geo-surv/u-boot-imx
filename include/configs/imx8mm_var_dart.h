@@ -95,11 +95,16 @@
 	"optargs=setenv bootargs ${bootargs} ${kernelargs};\0" \
 	"mmcargs=setenv bootargs console=${console} " \
 		"root=/dev/mmcblk${mmcblk}p${mmcpart} rootwait rw ${cma_size}\0 " \
-	"loadbootscript=load mmc ${mmcdev}:${mmcpart} ${loadaddr} ${bootdir}/${script};\0" \
+	"loadbootscript=echo Loading 4KiB bootscript from mmc +4MiB+16KiB; "\
+		"mmc read ${loadaddr} 2020 8;\0"                                    \
 	"bootscript=echo Running bootscript from mmc ...; " \
 		"source\0" \
 	"loadimage=load mmc ${mmcdev}:${mmcpart} ${img_addr} ${bootdir}/${image};" \
 		"unzip ${img_addr} ${loadaddr}\0" \
+	"loadinitrd=echo Loading 80MiB bootinitrd from mmc +8MiB; " \
+		"mmc read ${initrd_addr} 4000 28000;\0"                                    \
+	"bootinitrd=echo Running bootinitrd from mmc ...; " \
+		"bootm ${initrd_addr}\0" \
 	"findfdt=" \
 		"if test $fdt_file = undefined; then " \
 			"if test $board_name = VAR-SOM-MX8M-MINI; then " \
@@ -158,20 +163,18 @@
 		"fi;\0"
 
 #define CONFIG_BOOTCOMMAND \
-	"run ramsize_check; " \
 	"mmc dev ${mmcdev}; "\
 	"if mmc rescan; then " \
-		"if test ${use_m4} = yes && run loadm4bin; then " \
-			"run runm4bin; " \
+		"if run loadbootscript && run bootscript; then " \
+			"echo Bootscript finished; " \
 		"fi; " \
-		"if run loadbootscript; then " \
-			"run bootscript; " \
+		"if run loadinitrd && run bootinitrd; then " \
+			"echo Bootinitrd finished; " \
+		"fi; " \
+		"if run loadimage; then " \
+			"run mmcboot; " \
 		"else " \
-			"if run loadimage; then " \
-				"run mmcboot; " \
-			"else " \
-				"run netboot; " \
-			"fi; " \
+			"run netboot; " \
 		"fi; " \
 	"else " \
 		"booti ${loadaddr} - ${fdt_addr}; " \
