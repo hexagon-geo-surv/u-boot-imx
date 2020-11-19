@@ -90,7 +90,6 @@
 #define CONFIG_MFG_ENV_SETTINGS \
 	CONFIG_MFG_ENV_SETTINGS_DEFAULT \
 	"initrd_addr=0x43800000\0" \
-	"initrd_high=0xffffffffffffffff\0" \
 	"emmc_dev=2\0"\
 	"sd_dev=1\0" \
 
@@ -120,11 +119,10 @@
 	"splashimage=0x50000000\0" \
 	"console=ttymxc1,115200\0" \
 	"fdt_addr=0x43000000\0"			\
-	"fdt_high=0xffffffffffffffff\0"		\
 	"boot_fit=no\0" \
 	"fdt_file=" CONFIG_DEFAULT_FDT_FILE "\0" \
 	"initrd_addr=0x43800000\0"		\
-	"initrd_high=0xffffffffffffffff\0" \
+	"bootm_size=0x10000000\0" \
 	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
 	"mmcpart=" __stringify(CONFIG_SYS_MMC_IMG_LOAD_PART) "\0" \
 	"mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
