@@ -130,10 +130,15 @@
 	"mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
 	"mmcautodetect=yes\0" \
 	"mmcargs=setenv bootargs ${jh_clk} console=${console} root=${mmcroot}\0 " \
-	"loadbootscript=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
+	"loadbootscript=echo Loading 4KiB bootscript from mmc +4MiB+16KiB; " \
+		"mmc read ${loadaddr} 2020 8;\0" \
 	"bootscript=echo Running bootscript from mmc ...; " \
 		"source\0" \
 	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
+	"loadinitrd=echo Loading 80MiB bootinitrd from mmc +8MiB; " \
+		"mmc read ${initrd_addr} 4000 28000;\0" \
+	"bootinitrd=echo Running bootinitrd from mmc ...; " \
+		"bootm ${initrd_addr}\0" \
 	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
 	"mmcboot=echo Booting from mmc ...; " \
 		"run mmcargs; " \
@@ -169,13 +174,15 @@
 
 #define CONFIG_BOOTCOMMAND \
 	   "mmc dev ${mmcdev}; if mmc rescan; then " \
-		   "if run loadbootscript; then " \
-			   "run bootscript; " \
-		   "else " \
-			   "if run loadimage; then " \
-				   "run mmcboot; " \
-			   "else run netboot; " \
-			   "fi; " \
+		   "if run loadbootscript && run bootscript; then " \
+			   "echo Bootscript finished; " \
+		   "fi; " \
+		   "if run loadinitrd && run bootinitrd; then " \
+			   "echo Bootinitrd finished; " \
+		   "fi; " \
+		   "if run loadimage; then " \
+			   "run mmcboot; " \
+		   "else run netboot; " \
 		   "fi; " \
 	   "fi;"
 #endif
