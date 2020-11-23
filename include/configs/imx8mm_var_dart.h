@@ -57,7 +57,6 @@
 #define CONFIG_MFG_ENV_SETTINGS \
 	CONFIG_MFG_ENV_SETTINGS_DEFAULT \
 	"initrd_addr=0x43800000\0" \
-	"initrd_high=0xffffffffffffffff\0" \
 	"emmc_dev=2\0"\
 	"sd_dev=1\0" \
 
@@ -70,7 +69,7 @@
 	"console=ttymxc0,115200\0" \
 	"img_addr=0x42000000\0"			\
 	"fdt_addr=0x43000000\0"			\
-	"fdt_high=0xffffffffffffffff\0"		\
+	"bootm_size=0x10000000\0"		\
 	"boot_fdt=try\0" \
 	"ip_dyn=yes\0" \
 	"fdt_file=undefined\0" \
