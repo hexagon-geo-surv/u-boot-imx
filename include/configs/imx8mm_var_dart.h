@@ -160,7 +160,8 @@
 			"fi; " \
 		"else " \
 			"booti; " \
-		"fi;\0"
+		"fi;\0" \
+	"swu=1\0"
 
 #define CONFIG_BOOTCOMMAND \
 	"mmc dev ${mmcdev}; "\
