@@ -167,6 +167,7 @@
 		"bootm ${initrd_addr};\0" \
 	"swu=1\0"
 
+#ifndef CONFIG_FSPI_NOR_BOOTFLOW
 #define CONFIG_BOOTCOMMAND \
 	"mmc dev ${mmcdev}; "\
 	"if mmc rescan; then " \
@@ -184,6 +185,10 @@
 	"else " \
 		"booti ${loadaddr} - ${fdt_addr}; " \
 	"fi;"
+#else
+#define CONFIG_BOOTCOMMAND \
+	"run qspiboot;"
+#endif
 
 /* Link Definitions */
 #define CONFIG_LOADADDR			0x40480000
