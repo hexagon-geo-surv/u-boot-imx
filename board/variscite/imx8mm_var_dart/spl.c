@@ -249,7 +249,8 @@ int board_fit_config_name_match(const char *name)
 {
 	int id = get_board_id();
 
-	if ((id == DART_MX8M_MINI) && !strcmp(name, "imx8mm-var-dart-customboard")) {
+	if ((id == DART_MX8M_MINI) &&
+	    (!strcmp(name, "imx8mm-var-dart-customboard") || !strcmp(name, "imx8mm-var-dart-ap20"))) {
 		return 0;
 	} else if (id == VAR_SOM_MX8M_MINI) {
 		struct var_eeprom *ep = VAR_EEPROM_DATA;
