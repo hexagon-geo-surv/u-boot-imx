@@ -161,6 +161,10 @@
 		"else " \
 			"booti; " \
 		"fi;\0" \
+	"qspiboot=echo Booting from qspi ...;" \
+		"sf probe; "\
+		"sf read ${initrd_addr} 0x200000 0x1600000; "\
+		"bootm ${initrd_addr};\0" \
 	"swu=1\0"
 
 #define CONFIG_BOOTCOMMAND \
