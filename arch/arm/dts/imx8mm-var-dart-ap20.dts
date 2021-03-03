@@ -50,7 +50,6 @@
 			MX8MM_IOMUXC_ENET_RXC_ENET1_RGMII_RXC		0x91
 			MX8MM_IOMUXC_ENET_RX_CTL_ENET1_RGMII_RX_CTL	0x91
 			MX8MM_IOMUXC_ENET_TX_CTL_ENET1_RGMII_TX_CTL	0x1f
-			MX8MM_IOMUXC_GPIO1_IO09_GPIO1_I13		0x19
 		>;
 	};
 
@@ -69,7 +68,7 @@
 };
 
 &fec1 {
-	phy-reset-gpios = <&gpio1 13 GPIO_ACTIVE_LOW>;
+	/delete-property/ phy-reset-gpios;
 };
 
 &i2c3 {
