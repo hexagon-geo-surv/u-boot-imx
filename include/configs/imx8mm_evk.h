@@ -171,7 +171,8 @@
 				"echo WARN: Cannot load the DT; " \
 			"fi; " \
 		"fi;\0" \
-	"swu=1\0"
+	"swu=1\0" \
+	"fit_config=conf@freescale_crocodile.dtb\0"
 
 #define CONFIG_BOOTCOMMAND \
 	   "mmc dev ${mmcdev}; if mmc rescan; then " \
