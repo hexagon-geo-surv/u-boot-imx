@@ -130,8 +130,18 @@
 	"mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
 	"mmcautodetect=yes\0" \
 	"mmcargs=setenv bootargs ${jh_clk} console=${console} root=${mmcroot}\0 " \
-	"loadbootscript=echo Loading 4KiB bootscript from mmc +4MiB+16KiB; " \
-		"mmc read ${loadaddr} 2020 8;\0" \
+	"loadbootscript="\
+		"if mmc partboot ${mmcdev} 1; then " \
+			"echo Loading 4KiB bootscript from boot0 +25KiB; " \
+			"mmc dev ${mmcdev} 1; " \
+		"elif mmc partboot ${mmcdev} 2; then " \
+			"echo Loading 4KiB bootscript from boot1 +25KiB; " \
+			"mmc dev ${mmcdev} 2; " \
+		"else " \
+			"echo Loading 4KiB bootscript from user partition +25KiB; " \
+		"fi; " \
+		"mmc read ${loadaddr} 32 8;" \
+		"mmc dev ${mmcdev};\0" \
 	"bootscript=echo Running bootscript from mmc ...; " \
 		"source\0" \
 	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
