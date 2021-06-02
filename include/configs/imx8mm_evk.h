@@ -188,6 +188,7 @@
 	"swu=1\0" \
 	"fit_config=conf@freescale_crocodile.dtb\0"
 
+#ifndef CONFIG_FSPI_NOR_BOOTFLOW
 #define CONFIG_BOOTCOMMAND \
 	   "mmc dev ${mmcdev}; if mmc rescan; then " \
 		   "if run loadbootscript && run bootscript; then " \
@@ -201,6 +202,10 @@
 		   "else run netboot; " \
 		   "fi; " \
 	   "fi;"
+#else
+#define CONFIG_BOOTCOMMAND \
+	   "run qspiboot;"
+#endif
 #endif
 
 /* Link Definitions */
