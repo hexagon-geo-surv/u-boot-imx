@@ -26,6 +26,13 @@
 		stdout-path = &uart1;
 	};
 	
+	usbg1: usbg1 {
+		compatible = "fsl,imx27-usb-gadget";
+		dr_mode = "peripheral";
+		chipidea,usb = <&usbotg1>;
+		status = "okay";
+	};
+	
 	/delete-node/ reg_eth_phy;
 };
 
