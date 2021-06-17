@@ -176,7 +176,7 @@
 		"sf read ${initrd_addr} 0x200000 0x1600000; "\
 		"bootm ${initrd_addr};\0" \
 	"swu=1\0" \
-	"fit_config=conf@freescale_ap20-pt1.dtb\0"
+	"fit_config=conf-freescale_ap20-pt1.dtb\0"
 
 #ifndef CONFIG_FSPI_NOR_BOOTFLOW
 #define CONFIG_BOOTCOMMAND \
