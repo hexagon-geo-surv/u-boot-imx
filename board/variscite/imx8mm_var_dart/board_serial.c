@@ -109,8 +109,6 @@
 #define TXTL		2  /* reset default */
 #define RXTL		1  /* reset default */
 
-DECLARE_GLOBAL_DATA_PTR;
-
 struct mxc_uart {
 	u32 rxd;
 	u32 spare0[15];
@@ -177,34 +175,29 @@ static void _mxc_serial_setbrg(struct mxc_uart *base, unsigned long clk,
 	writel(UCR1_UARTEN, &base->cr1);
 }
 
-#ifndef CONFIG_MXC_UART_BASE
-#error "define CONFIG_MXC_UART_BASE to use the MXC UART driver"
-#endif
+static struct mxc_uart *mxc_base;
 
-struct mxc_uart *mxc_base = ((struct mxc_uart *)CONFIG_MXC_UART_BASE);
-
-static void mxc_serial_setbrg(void)
+static void mxc_serial_setbrg(unsigned long baudrate, bool use_dte)
 {
 	u32 clk = imx_get_uartclk();
 
-	if (!gd->baudrate)
-		gd->baudrate = CONFIG_BAUDRATE;
+	if (!mxc_base)
+		return;
 
-	_mxc_serial_setbrg(mxc_base, clk, gd->baudrate, false);
+	_mxc_serial_setbrg(mxc_base, clk, baudrate, use_dte);
 }
 
-static int mxc_serial_getc(void)
+char board_serial_getc(void)
 {
 	while (readl(&mxc_base->ts) & UTS_RXEMPTY)
 		WATCHDOG_RESET();
 	return (readl(&mxc_base->rxd) & URXD_RX_DATA); /* mask out status from upper word */
 }
 
-static void mxc_serial_putc(const char c)
+void board_serial_putc(const char c)
 {
-	/* If \n, also do \r */
-	if (c == '\n')
-		serial_putc('\r');
+	if (!mxc_base)
+		return;
 
 	writel(c, &mxc_base->txd);
 
@@ -217,8 +210,11 @@ static void mxc_serial_putc(const char c)
  * Test whether a character is in the RX buffer
  */
 static int one_time_rx_line_always_low_workaround_needed = 1;
-static int mxc_serial_tstc(void)
+int board_serial_tstc(void)
 {
+	if (!mxc_base)
+		return 0;
+
 	/* If receive fifo is empty, return false */
 	if (readl(&mxc_base->ts) & UTS_RXEMPTY)
 		return 0;
@@ -237,15 +233,16 @@ static int mxc_serial_tstc(void)
 	return 1;
 }
 
-/*
- * Initialise the serial port with the given baudrate. The settings
- * are always 8 data bits, no parity, 1 stop bit, no start bits.
- */
-static int mxc_serial_init(void)
+int board_serial_init(void *base, unsigned long baudrate, bool use_dte)
 {
-	_mxc_serial_init(mxc_base, false);
+	if (!base)
+		return -1;
 
-	serial_setbrg();
+	mxc_base = (struct mxc_uart *) base;
+
+	_mxc_serial_init(mxc_base, use_dte);
+
+	mxc_serial_setbrg(baudrate, use_dte);
 
 	return 0;
 }
