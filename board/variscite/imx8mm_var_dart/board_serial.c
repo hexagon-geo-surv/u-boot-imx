@@ -246,3 +246,9 @@ int board_serial_init(void *base, unsigned long baudrate, bool use_dte)
 
 	return 0;
 }
+
+void board_serial_puts(const char *s)
+{
+	while (*s)
+		board_serial_putc(*s++);
+}
