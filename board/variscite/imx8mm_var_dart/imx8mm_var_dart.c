@@ -20,6 +20,7 @@
 
 #include "../common/imx8_eeprom.h"
 #include "imx8mm_var_dart.h"
+#include "board_serial.h"
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -105,6 +106,11 @@ static int leica_get_boot_src()
 static iomux_v3_cfg_t const uart1_pads[] = {
 	IMX8MM_PAD_UART1_RXD_UART1_RX | MUX_PAD_CTRL(UART_PAD_CTRL),
 	IMX8MM_PAD_UART1_TXD_UART1_TX | MUX_PAD_CTRL(UART_PAD_CTRL),
+};
+
+static iomux_v3_cfg_t const uart2_pads[] = {
+       IMX8MM_PAD_UART2_RXD_UART2_RX | MUX_PAD_CTRL(UART_PAD_CTRL),
+       IMX8MM_PAD_UART2_TXD_UART2_TX | MUX_PAD_CTRL(UART_PAD_CTRL),
 };
 
 static iomux_v3_cfg_t const uart4_pads[] = {
@@ -212,14 +218,60 @@ int board_init(void)
 	return 0;
 }
 
+static int init_mcu_uart(struct leica_sep_funcs *sep_funcs)
+{
+	init_uart_clk(1);
+
+	imx_iomux_v3_setup_multiple_pads(uart2_pads, ARRAY_SIZE(uart2_pads));
+
+	if (board_serial_init((void*)UART2_BASE_ADDR, 115200, false) < 0)
+		return -1;
+
+	sep_funcs->puts = &board_serial_puts;
+	sep_funcs->getc = &board_serial_getc;
+	sep_funcs->tstc = &board_serial_tstc;
+
+	return 0;
+}
+
 #define SDRAM_SIZE_STR_LEN 5
 int board_late_init(void)
 {
 	int som_rev;
 	char sdram_size_str[SDRAM_SIZE_STR_LEN];
 	int id = get_board_id();
+	int boot_src = leica_get_boot_src();
+	struct leica_sep_funcs sep_funcs;
 
 	struct var_eeprom *ep = VAR_EEPROM_DATA;
+
+	env_set("leica_board", "UNKNOWN");
+
+	if (init_mcu_uart(&sep_funcs) == 0) {
+		struct leica_sep_board_id board_id;
+
+		if (leica_sep_send_ack(&sep_funcs, boot_src) < 0)
+			puts("Failed to send SEP ACK!\n");
+
+		if (leica_sep_get_board_id(&sep_funcs, &board_id) < 0) {
+			puts("Failed to get SEP version!\n");
+		}
+		else {
+			switch (board_id.board_index) {
+			case 'A':
+				env_set("leica_board", "AP20-PT1");
+				break;
+			default:
+				printf("Unknown Leica Board index: %c\n",
+					board_id.board_index);
+				break;
+			}
+		}
+	}
+	else {
+		printf("Failed to initilize MCU UART\n");
+	}
+
 
 #ifdef CONFIG_FEC_MXC
 	var_setup_mac(ep);
