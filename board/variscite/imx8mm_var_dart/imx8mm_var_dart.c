@@ -16,6 +16,7 @@
 #include <asm/arch/clock.h>
 #include <usb.h>
 #include <dm.h>
+#include <leica_sep.h>
 
 #include "../common/imx8_eeprom.h"
 #include "imx8mm_var_dart.h"
@@ -72,6 +73,30 @@ int var_get_som_rev(struct var_eeprom *ep)
 		return SOM_REV_10;
 	else
 		return SOM_REV_11;
+}
+
+static int leica_get_boot_src()
+{
+	struct src *psrc = (struct src *)SRC_BASE_ADDR;
+	unsigned reg = readl(&psrc->sbmr1) >> 12;
+	int ret = -1;
+
+	switch (reg & 0x7) {
+	case 0x2:
+		ret = LEICA_SEP_ACK_BOOT_SRC_EMMC;
+		puts("Booted from eMMC\n");
+		break;
+	case 0x4:
+		ret = LEICA_SEP_ACK_BOOT_SRC_QSPI;
+		puts("Booted from QSPI\n");
+		break;
+	default:
+		ret = LEICA_SEP_ACK_BOOT_SRC_UNKNOWN;
+		puts("Unknown Boot source\n");
+		break;
+	}
+
+	return ret;
 }
 
 #define UART_PAD_CTRL	(PAD_CTL_DSE6 | PAD_CTL_FSEL1)
