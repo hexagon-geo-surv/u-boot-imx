@@ -12,6 +12,8 @@
 #include <serial.h>
 #include <linux/compiler.h>
 
+#include "board_serial.h"
+
 /* UART Control Register Bit Fields.*/
 #define URXD_CHARRDY	(1<<15)
 #define URXD_ERR	(1<<14)
