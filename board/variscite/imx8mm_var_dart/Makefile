@@ -7,6 +7,7 @@
 
 obj-y += ../common/imx8_eeprom.o
 obj-y += imx8mm_var_dart.o
+obj-y += board_serial.o
 
 ifdef CONFIG_SPL_BUILD
 obj-y += spl.o
