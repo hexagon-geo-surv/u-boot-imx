@@ -41,14 +41,22 @@ static int do_get_active_bootmap(cmd_tbl_t * cmdtp, int flag, int argc, char * c
 	return CMD_RET_SUCCESS;
 }
 
-U_BOOT_CMD(
-	bootmap, 2, 0, do_get_active_bootmap,
-	"Add address and size of Leica System 1600 bootmap to environment.",
+#if CONFIG_IS_ENABLED(SYS_LONGHELP)
+static char bootmap_help_text[] =
 	"bootmap <address>"
 	"    <address>        Address of bootmap-switch (hex)\n"
 	"Variables added to environment:\n"
 	"    bootmap.address  Address of bootmap (hex)\n"
 	"    bootmap.blk      Block of bootmap (hex)\n"
 	"    bootmap.size     Size of bootmap (hex)\n"
-	"    bootmap.cnt      Size of bootmap in blocks (hex)\n"
+	"    bootmap.cnt      Size of bootmap in blocks (hex)"
+	;
+#endif
+
+U_BOOT_CMD(
+	bootmap, 2, 0, do_get_active_bootmap,
+	"Add address and size of Leica System 1600 bootmap to environment.",
+#if CONFIG_IS_ENABLED(SYS_LONGHELP)
+	bootmap_help_text
+#endif
 );
