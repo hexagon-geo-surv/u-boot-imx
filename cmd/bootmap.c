@@ -4,13 +4,15 @@
 #include <command.h>
 #include <console.h>
 
+struct bootmap_switch {
+	u32 address;
+	u32 size;
+} __packed;
+
 static int do_get_active_bootmap(cmd_tbl_t * cmdtp, int flag, int argc, char * const argv[])
 {
 	void *addr;
-	struct bootmap_switch {
-		u32 address;
-		u32 size;
-	} *bms;
+	struct bootmap_switch *bms;
 
 	if (argc < 2)
 		return CMD_RET_USAGE;
