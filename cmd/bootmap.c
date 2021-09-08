@@ -20,7 +20,7 @@ static int do_get_active_bootmap(cmd_tbl_t * cmdtp, int flag, int argc, char * c
 	addr = (void *)simple_strtoul(argv[1], NULL, 16);
 	if (!addr) {
 		printf("Bootmap-Switch address is NULL!\n");
-		return CMD_RET_FAILURE;
+		return CMD_RET_USAGE;
 	}
 
 	bms = (struct bootmap_switch *) addr;
