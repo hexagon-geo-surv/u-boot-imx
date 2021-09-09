@@ -5,8 +5,8 @@
 #include <console.h>
 #include <leica_sep.h>
 
-#define SEP_ACK_CMD   		"SE104:X\r\n"
-#define SEP_BOARD_ID  		"SC110:\r\n"
+#define SEP_ACK_CMD   		"SE203:X\r\n"
+#define SEP_BOARD_ID  		"SC111:\r\n"
 
 /*
  * leica_sep_transfer
@@ -78,7 +78,7 @@ int leica_sep_get_board_id(struct leica_sep_funcs *f, struct leica_sep_board_id 
 	n_bytes = leica_sep_transfer(f, SEP_BOARD_ID, data, sizeof(data), 500);
 	if (n_bytes < (int)(n_header + sizeof(*board_id))) {
 		printf("[SEP DBG]: Receive failed. Using test-data... Remove this!!! \n");
-		memcpy(data, "SR110,abcd:\"916761A2107310001\"\r\n", sizeof("SR110,abcd:\"916761A2107310001\"\r\n") - 1);
+		memcpy(data, "SR111,abcd:\"916761A2107310001\"\r\n", sizeof("SR111,abcd:\"916761A2107310001\"\r\n") - 1);
 		//return -1;
 	}
 
