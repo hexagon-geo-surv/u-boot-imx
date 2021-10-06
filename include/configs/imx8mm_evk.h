@@ -193,6 +193,11 @@
 	   "mmc dev ${mmcdev}; if mmc rescan; then " \
 		   "if run loadbootscript && run bootscript; then " \
 			   "echo Bootscript finished; " \
+		   "else " \
+			   "Try to load bootscript from user partition" \
+			   "mmc dev ${mmcdev} 0;" \
+			   "mmc read ${loadaddr} 32 8;" \
+			   "run bootscript;" \
 		   "fi; " \
 		   "if run loadinitrd && run bootinitrd; then " \
 			   "echo Bootinitrd finished; " \
