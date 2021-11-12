@@ -100,8 +100,10 @@ static int leica_get_boot_src()
 	return ret;
 }
 
-#define UART_PAD_CTRL	(PAD_CTL_DSE6 | PAD_CTL_FSEL1)
-#define WDOG_PAD_CTRL	(PAD_CTL_DSE6 | PAD_CTL_ODE | PAD_CTL_PUE | PAD_CTL_PE)
+#define UART_PAD_CTRL		(PAD_CTL_DSE6 | PAD_CTL_FSEL1)
+#define CPU_RDY_PAD_CTRL	(PAD_CTL_DSE6 | PAD_CTL_FSEL1 | PAD_CTL_PUE)
+#define WDOG_PAD_CTRL		(PAD_CTL_DSE6 | PAD_CTL_ODE | PAD_CTL_PUE | PAD_CTL_PE)
+#define CPU_RDY_GPIO 		IMX_GPIO_NR(1, 14)
 
 static iomux_v3_cfg_t const uart1_pads[] = {
 	IMX8MM_PAD_UART1_RXD_UART1_RX | MUX_PAD_CTRL(UART_PAD_CTRL),
@@ -120,6 +122,10 @@ static iomux_v3_cfg_t const uart4_pads[] = {
 
 static iomux_v3_cfg_t const wdog_pads[] = {
 	IMX8MM_PAD_GPIO1_IO02_WDOG1_WDOG_B  | MUX_PAD_CTRL(WDOG_PAD_CTRL),
+};
+
+static iomux_v3_cfg_t const cpu_rdy_pads[] = {
+	IMX8MM_PAD_GPIO1_IO14_GPIO1_IO14  | MUX_PAD_CTRL(CPU_RDY_PAD_CTRL),
 };
 
 extern struct mxc_uart *mxc_base;
@@ -204,6 +210,14 @@ static void setup_usb(void)
 	}
 }
 #endif
+
+void board_cli_init(void)
+{
+	imx_iomux_v3_setup_multiple_pads(cpu_rdy_pads, ARRAY_SIZE(cpu_rdy_pads));
+
+	gpio_request(CPU_RDY_GPIO, "cpu_rdy");
+	gpio_direction_output(CPU_RDY_GPIO, 1);
+}
 
 int board_init(void)
 {
