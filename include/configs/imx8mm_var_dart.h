@@ -198,7 +198,9 @@
 	"fi;"
 #else
 #define CONFIG_BOOTCOMMAND \
-	"run qspiboot;"
+	"run qspiboot; " \
+	"echo !!!  QSPI boot failed; " \
+	"run bootcmd_mfg; "
 #endif
 
 /* Link Definitions */
