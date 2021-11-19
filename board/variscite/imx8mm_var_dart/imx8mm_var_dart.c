@@ -214,10 +214,15 @@ static void setup_usb(void)
 }
 #endif
 
-void board_cli_init(void)
+int board_mcu_set_cpu_ready(void)
 {
-	gpio_request(CPU_RDY_GPIO, "cpu_rdy");
-	gpio_direction_output(CPU_RDY_GPIO, 1);
+	int ret;
+
+	ret = gpio_request(CPU_RDY_GPIO, "cpu_rdy");
+	if (ret < 0)
+		return ret;
+
+	return gpio_direction_output(CPU_RDY_GPIO, 1);
 }
 
 int get_leica_board_id(char *data, int data_size)
