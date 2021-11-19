@@ -1705,6 +1705,13 @@ config CMD_RNG
 	help
 	  Print bytes from the hardware random number generator.
 
+config LEICA_CMD_MCU_COM
+	bool "MCU communications"
+	help
+	  Communicate with Leica MCUs.
+	  This command allows to call subcommands communicate with MCU to send
+	  some GPIO signals or to send/receive data via serial communication.
+
 # TODO: rename to CMD_SLEEP
 config CMD_MISC
 	bool "sleep"
