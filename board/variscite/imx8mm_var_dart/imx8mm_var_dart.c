@@ -140,6 +140,8 @@ int board_early_init_f(void)
 
 	set_wdog_reset(wdog);
 
+	imx_iomux_v3_setup_multiple_pads(cpu_rdy_pads, ARRAY_SIZE(cpu_rdy_pads));
+
 	id = get_board_id();
 
 	if (id == DART_MX8M_MINI) {
@@ -214,8 +216,6 @@ static void setup_usb(void)
 
 void board_cli_init(void)
 {
-	imx_iomux_v3_setup_multiple_pads(cpu_rdy_pads, ARRAY_SIZE(cpu_rdy_pads));
-
 	gpio_request(CPU_RDY_GPIO, "cpu_rdy");
 	gpio_direction_output(CPU_RDY_GPIO, 1);
 }
