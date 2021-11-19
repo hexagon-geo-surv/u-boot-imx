@@ -20,8 +20,6 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
-void __weak board_cli_init(void) {}
-
 #ifdef CONFIG_CMDLINE
 /*
  * Run a command using the selected parser.
@@ -226,7 +224,6 @@ err:
 void cli_loop(void)
 {
 	bootstage_mark(BOOTSTAGE_ID_ENTER_CLI_LOOP);
-	board_cli_init();
 #ifdef CONFIG_HUSH_PARSER
 	parse_file_outer();
 	/* This point is never reached */
