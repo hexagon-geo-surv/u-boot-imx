@@ -65,36 +65,9 @@
 /* Initial environment variables */
 #define CONFIG_EXTRA_ENV_SETTINGS		\
 	CONFIG_MFG_ENV_SETTINGS \
-	"bootdir=/boot\0"	\
-	"script=boot.scr\0" \
-	"image=Image.gz\0" \
 	"console=ttymxc0,115200\0" \
-	"img_addr=0x42000000\0"			\
-	"fdt_addr=0x43000000\0"			\
-	"bootm_size=0x10000000\0"		\
-	"boot_fdt=try\0" \
-	"ip_dyn=yes\0" \
-	"fdt_file=undefined\0" \
 	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
-	"mmcblk=1\0" \
 	"mmcautodetect=yes\0" \
-	"mmcpart=1\0" \
-	"m4_addr=0x7e0000\0" \
-	"m4_bin=hello_world.bin\0" \
-	"use_m4=no\0" \
-	"loadm4bin=load mmc ${mmcdev}:${mmcpart} ${loadaddr} ${bootdir}/${m4_bin}; " \
-		"cp.b ${loadaddr} ${m4_addr} ${filesize}\0" \
-	"runm4bin=" \
-		"if test ${m4_addr} = 0x7e0000; then " \
-			"echo Booting M4 from TCM; " \
-		"else " \
-			"echo Booting M4 from DRAM; " \
-			"dcache flush; " \
-		"fi; " \
-		"bootaux ${m4_addr};\0" \
-	"optargs=setenv bootargs ${bootargs} ${kernelargs};\0" \
-	"mmcargs=setenv bootargs console=${console} " \
-		"root=/dev/mmcblk${mmcblk}p${mmcpart} rootwait rw ${cma_size}\0 " \
 	"loadbootscript="\
 		"if mmc partboot ${mmcdev} 1; then " \
 			"echo Loading 4KiB bootscript from boot0 +25KiB; " \
@@ -109,68 +82,6 @@
 		"mmc dev ${mmcdev};\0" \
 	"bootscript=echo Running bootscript from mmc ...; " \
 		"source\0" \
-	"loadimage=load mmc ${mmcdev}:${mmcpart} ${img_addr} ${bootdir}/${image};" \
-		"unzip ${img_addr} ${loadaddr}\0" \
-	"loadinitrd=echo Loading 80MiB bootinitrd from mmc +8MiB; " \
-		"mmc read ${initrd_addr} 4000 28000;\0"                                    \
-	"bootinitrd=echo Running bootinitrd from mmc ...; " \
-		"bootm ${initrd_addr}\0" \
-	"findfdt=" \
-		"if test $fdt_file = undefined; then " \
-			"if test $board_name = VAR-SOM-MX8M-MINI; then " \
-				"if test $som_rev = som_rev10; then " \
-					"setenv fdt_file imx8mm-var-som-rev10-symphony.dtb; " \
-				"else " \
-					"setenv fdt_file imx8mm-var-som-symphony.dtb; " \
-				"fi;" \
-			"else " \
-				"setenv fdt_file imx8mm-var-dart-customboard.dtb;" \
-			"fi; " \
-		"fi; \0" \
-	"loadfdt=run findfdt; " \
-		"echo fdt_file=${fdt_file}; " \
-		"load mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${bootdir}/${fdt_file}\0" \
-	"ramsize_check="\
-		"if test $sdram_size -le 512; then " \
-			"setenv cma_size cma=320M; " \
-		"else " \
-			"setenv cma_size cma=640M@1376M; " \
-		"fi;\0" \
-	"mmcboot=echo Booting from mmc ...; " \
-		"run mmcargs; " \
-		"run optargs; " \
-		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
-			"if run loadfdt; then " \
-				"booti ${loadaddr} - ${fdt_addr}; " \
-			"else " \
-				"echo WARN: Cannot load the DT; " \
-			"fi; " \
-		"else " \
-			"echo wait for boot; " \
-		"fi;\0" \
-	"netargs=setenv bootargs console=${console} " \
-		"root=/dev/nfs ${cma_size} " \
-		"ip=dhcp nfsroot=${serverip}:${nfsroot},v3,tcp\0" \
-	"netboot=echo Booting from net ...; " \
-		"if test ${ip_dyn} = yes; then " \
-			"setenv get_cmd dhcp; " \
-		"else " \
-			"setenv get_cmd tftp; " \
-		"fi; " \
-		"${get_cmd} ${img_addr} ${image}; unzip ${img_addr} ${loadaddr};" \
-		"run netargs; " \
-		"run optargs; " \
-		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
-			"run findfdt; " \
-			"echo fdt_file=${fdt_file}; " \
-			"if ${get_cmd} ${fdt_addr} ${fdt_file}; then " \
-				"booti ${loadaddr} - ${fdt_addr}; " \
-			"else " \
-				"echo WARN: Cannot load the DT; " \
-			"fi; " \
-		"else " \
-			"booti; " \
-		"fi;\0" \
 	"qspiboot=echo Booting from qspi ...;" \
 		"sf probe; "\
 		"sf read ${initrd_addr} 0x200000 0x1600000; "\
@@ -185,16 +96,6 @@
 		"if run loadbootscript && run bootscript; then " \
 			"echo Bootscript finished; " \
 		"fi; " \
-		"if run loadinitrd && run bootinitrd; then " \
-			"echo Bootinitrd finished; " \
-		"fi; " \
-		"if run loadimage; then " \
-			"run mmcboot; " \
-		"else " \
-			"run netboot; " \
-		"fi; " \
-	"else " \
-		"booti ${loadaddr} - ${fdt_addr}; " \
 	"fi;"
 #else
 #define CONFIG_BOOTCOMMAND \
