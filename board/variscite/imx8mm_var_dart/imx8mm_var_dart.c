@@ -273,7 +273,12 @@ int board_late_init(void)
 		else {
 			switch (board_id.board_index) {
 			case 'A':
+			case 'B':
+			case 'C':
 				env_set("leica_board", "AP20-PT1");
+				break;
+			case 'D':
+				env_set("leica_board", "AP20-PT1-5");
 				break;
 			default:
 				printf("Unknown Leica Board index: %c\n",
