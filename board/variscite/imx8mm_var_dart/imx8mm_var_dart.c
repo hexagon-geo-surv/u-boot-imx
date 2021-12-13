@@ -25,6 +25,7 @@
 DECLARE_GLOBAL_DATA_PTR;
 
 extern int var_setup_mac(struct var_eeprom *eeprom);
+static struct leica_sep_funcs sep_funcs = {0};
 
 #ifdef CONFIG_SPL_BUILD
 #define GPIO_PAD_CTRL	(PAD_CTL_DSE6 | PAD_CTL_FSEL1 | PAD_CTL_PUE | PAD_CTL_PE)
@@ -219,6 +220,16 @@ void board_cli_init(void)
 	gpio_direction_output(CPU_RDY_GPIO, 1);
 }
 
+int get_leica_board_id(char *data, int data_size)
+{
+	return leica_get_sep(&sep_funcs, BOARD_ID, data, data_size);
+}
+
+int get_production_flag(char *data, int data_size)
+{
+	return leica_get_sep(&sep_funcs, PRODUCTION_FLAG, data, data_size);
+}
+
 int board_init(void)
 {
 #ifdef CONFIG_FEC_MXC
@@ -255,37 +266,12 @@ int board_late_init(void)
 	char sdram_size_str[SDRAM_SIZE_STR_LEN];
 	int id = get_board_id();
 	int boot_src = leica_get_boot_src();
-	struct leica_sep_funcs sep_funcs;
 
 	struct var_eeprom *ep = VAR_EEPROM_DATA;
 
-	env_set("leica_board", "UNKNOWN");
-
 	if (init_mcu_uart(&sep_funcs) == 0) {
-		struct leica_sep_board_id board_id;
-
 		if (leica_sep_send_ack(&sep_funcs, boot_src) < 0)
 			puts("Failed to send SEP ACK!\n");
-
-		if (leica_sep_get_board_id(&sep_funcs, &board_id) < 0) {
-			puts("Failed to get SEP version!\n");
-		}
-		else {
-			switch (board_id.board_index) {
-			case 'A':
-			case 'B':
-			case 'C':
-				env_set("leica_board", "AP20-PT1");
-				break;
-			case 'D':
-				env_set("leica_board", "AP20-PT1-5");
-				break;
-			default:
-				printf("Unknown Leica Board index: %c\n",
-					board_id.board_index);
-				break;
-			}
-		}
 	}
 	else {
 		printf("Failed to initilize MCU UART\n");
