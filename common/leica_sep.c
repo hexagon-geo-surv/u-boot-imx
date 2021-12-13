@@ -1,27 +1,34 @@
 // SPDX-License-Identifier: GPL-2.0+
+/*
+ * Copyright (C) 2021 Leica Geosystems AG
+ */
 
 #include <common.h>
 #include <watchdog.h>
 #include <console.h>
 #include <leica_sep.h>
 
-#define SEP_ACK_CMD   		"SE203:X\r\n"
-#define SEP_BOARD_ID  		"SC111:\r\n"
+#define SEP_ACK_CMD           "SE203:X\r\n"
+#define SEP_BOARD_ID          "SC111:\r\n"
+#define SEP_PRODUCTION_FLAG   "SC135:\r\n"
+/*Max length of a SEP cmd*/
+#define SEP_CMD_LENGTH        16
+/*Board id index in the payload array*/
+#define BOARD_ID_IDX          6
 
 /*
  * leica_sep_transfer
  *
  * -> Send SEP command 'SCXXX:\r\n'
  * -> Wait for reception of 'SRXXX,ABCD:<payload>\r\n'
+ * -> Fills the input 'data' with the <payload>
  */
-static int leica_sep_transfer(struct leica_sep_funcs *f, char *cmd, char *data, size_t size, ulong timeout_ms)
+static int leica_sep_transfer(struct leica_sep_funcs *f, char *cmd,
+			      char *data, size_t size, ulong timeout_ms)
 {
 	size_t bytes_received = 0;
 	ulong start = get_timer(0);
-	int cmd_length = 0;
-	int command_received = 0;
-	char debug[1024] = {0};
-	char *d = debug;
+	int cmd_length = 0, command_received = 0;
 
 	if(!f || !f->puts || !f->tstc || !f->getc || !cmd || !data)
 		return -1;
@@ -32,58 +39,95 @@ static int leica_sep_transfer(struct leica_sep_funcs *f, char *cmd, char *data, 
 	while(cmd[cmd_length] != ':' && cmd[cmd_length] != '\0')
 		cmd_length++;
 
-	if (size < cmd_length)
-		return -1;
-
 	f->puts(cmd);
 	cmd[1] = 'R';
-	*d++ = '-';
 	while(get_timer(0) < (start + timeout_ms))
 	{
 		if (!f->tstc())
 			continue;
 
-		data[bytes_received++] = f->getc();
-		*d++ = data[bytes_received -1];
+		if (size <= bytes_received)
+			return -1;
 
-		if ((data[bytes_received - 1] == '\n') || (bytes_received >= size)) {
-			if (bytes_received >= cmd_length &&
-			    !strncmp(data, cmd, cmd_length))
-			{
-				command_received = 1;
-				break;
-			}
-			*d++ = '-';
-			bytes_received = 0;
+		data[bytes_received] = f->getc();
+
+		if (data[bytes_received] == '\n' &&
+		    bytes_received >= 1 &&
+		    data[bytes_received - 1] == '\r') {
+			bytes_received--;
+
+			if (bytes_received >= 2 &&
+			    data[bytes_received - 2] == '"')
+				bytes_received--;
+
+			command_received = 1;
+			break;
 		}
+
+		if (data[bytes_received] == ':') {
+			/* Compare data with cmd. Data before ":" can be longer
+			 * than cmd (including the CRC), this is why cmd_length
+			 * is used for the comparison
+			 */
+			if (bytes_received < cmd_length ||
+			    strncmp(data, cmd, cmd_length))
+				return -1;
+			bytes_received = 0;
+			continue;
+		}
+
+		if (bytes_received == 0 && data[bytes_received] == '"')
+			continue;
+
+		bytes_received++;
 	}
-	debug[sizeof(debug) - 1] = 0;
-	printf("[SEP DBG]:\n%s\n", debug);
 
 	if (!command_received)
 		return -1;
 
+	/* We substitute the last char with '\0' to terminate the payload
+	 * string
+	 */
+	data[bytes_received] = '\0';
+
 	return bytes_received;
 }
 
-int leica_sep_get_board_id(struct leica_sep_funcs *f, struct leica_sep_board_id *board_id)
+/*
+ * leica_get_sep
+ *
+ * Function to communicate with the MCU and get parsed data from the SEP
+ * payload. The result is stored in the input 'data' string.
+ * Available SEPs are: 'BOARD_ID', 'PRODUCTION_FLAG'.
+ */
+int leica_get_sep(struct leica_sep_funcs *f, enum leica_sep_type leica_sep,
+		  char *data, int data_size)
 {
-	char data[512];
+	char command[SEP_CMD_LENGTH];
 	int n_bytes;
-	size_t n_header = sizeof(SEP_BOARD_ID) - 1 + sizeof(",XXXX") - 1;
 
-	if(!board_id)
-		return -1;
-
-	n_bytes = leica_sep_transfer(f, SEP_BOARD_ID, data, sizeof(data), 500);
-	if (n_bytes < (int)(n_header + sizeof(*board_id))) {
-		printf("[SEP DBG]: Receive failed. Using test-data... Remove this!!! \n");
-		memcpy(data, "SR111,abcd:\"916761A2107310001\"\r\n", sizeof("SR111,abcd:\"916761A2107310001\"\r\n") - 1);
-		//return -1;
+	switch (leica_sep) {
+		case(BOARD_ID):
+			snprintf(command, sizeof(command), "%s", SEP_BOARD_ID);
+			break;
+		case(PRODUCTION_FLAG):
+			snprintf(command, sizeof(command), "%s",
+				 SEP_PRODUCTION_FLAG);
+			break;
 	}
-
-	memcpy(board_id, &data[n_header - (sizeof("\r\n") - 2)], sizeof(*board_id));
-
+	n_bytes = leica_sep_transfer(f, command, data, data_size, 500);
+	if (n_bytes < 0) {
+		printf("Error in SEP transfer\n");
+		return -1;
+	}
+	if (leica_sep == BOARD_ID) {
+		if (strlen(data) < BOARD_ID_IDX + 1) {
+			printf("Error getting board id\n");
+			return -1;
+		}
+		data[0] = data[BOARD_ID_IDX];
+		data[1] = '\0';
+	}
 	return 0;
 }
 
@@ -91,10 +135,10 @@ int leica_sep_send_ack(struct leica_sep_funcs *f, int boot_src)
 {
 	char data[] = SEP_ACK_CMD;
 
-	if(!f || !f->puts)
+	if (!f || !f->puts)
 		return -1;
 
-	switch(boot_src) {
+	switch (boot_src) {
 		case LEICA_SEP_ACK_BOOT_SRC_EMMC:
 			data[6] = '2';
 			break;
