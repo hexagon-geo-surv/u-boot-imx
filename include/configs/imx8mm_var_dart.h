@@ -67,7 +67,6 @@
 	CONFIG_MFG_ENV_SETTINGS \
 	"console=ttymxc0,115200\0" \
 	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
-	"mmcautodetect=yes\0" \
 	"loadbootscript="\
 		"if mmc partboot ${mmcdev} 1; then " \
 			"echo Loading 4KiB bootscript from boot0 +25KiB; " \
@@ -117,7 +116,7 @@
 	(CONFIG_SYS_INIT_RAM_ADDR + CONFIG_SYS_INIT_SP_OFFSET)
 
 #define CONFIG_ENV_OVERWRITE
-#define CONFIG_SYS_MMC_ENV_DEV		1   /* USDHC2 */
+#define CONFIG_SYS_MMC_ENV_DEV		2   /* USDHC3 */
 
 /* Size of malloc() pool */
 #define CONFIG_SYS_MALLOC_LEN		SZ_32M
