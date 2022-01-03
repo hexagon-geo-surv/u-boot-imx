@@ -5,7 +5,8 @@
 #include <console.h>
 
 struct bootmap_switch {
-	u32 address;
+	u32 active_addr;
+	u32 standby_addr;
 	u32 size;
 } __packed;
 
@@ -25,16 +26,26 @@ static int do_get_active_bootmap(cmd_tbl_t * cmdtp, int flag, int argc, char * c
 
 	bms = (struct bootmap_switch *) addr;
 
-	bms->address = be32_to_cpu(bms->address);
+	bms->active_addr = be32_to_cpu(bms->active_addr);
+	bms->standby_addr = be32_to_cpu(bms->standby_addr);
 	bms->size = be32_to_cpu(bms->size);
 
-	if (bms->address % 512 || bms->size % 512) {
+	if (bms->active_addr % 512 ||
+	    bms->standby_addr % 512 ||
+	    bms->size % 512)
+	{
 		printf("Bootmap not aligned!\n");
 		return CMD_RET_FAILURE;
 	}
 
-	env_set_hex("bootmap.address", bms->address);
-	env_set_hex("bootmap.blk", bms->address >> 9);
+	printf(" active address: 0x%08x\n", bms->active_addr);
+	printf("standby address: 0x%08x\n", bms->standby_addr);
+	printf("  one copy size: 0x%08x\n", bms->size);
+
+	env_set_hex("bootmap.active_addr", bms->active_addr);
+	env_set_hex("bootmap.active_blk", bms->active_addr >> 9);
+	env_set_hex("bootmap.standby_addr", bms->standby_addr);
+	env_set_hex("bootmap.standby_blk", bms->standby_addr >> 9);
 	env_set_hex("bootmap.size", bms->size);
 	env_set_hex("bootmap.cnt", bms->size >> 9);
 
