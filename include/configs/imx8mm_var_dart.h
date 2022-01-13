@@ -84,9 +84,14 @@
 	"qspiboot=echo Booting from qspi ...;" \
 		"sf probe; "\
 		"sf read ${initrd_addr} 0x200000 0x1600000; "\
-		"bootm ${initrd_addr};\0" \
+		"bootm ${initrd_addr}#${fit_config};\0" \
 	"swu=1\0" \
-	"fit_config=conf-freescale_ap20-pt1.dtb\0"
+	"get_fit_config=leica_mcu_comm board_id board_id;" \
+		"if test \"${board_id}\" < \"D\"; then" \
+		"    env set fit_config conf-freescale_ap20-pt1.dtb;" \
+		"else" \
+		"    env set fit_config conf-freescale_ap20-pt1-5.dtb;" \
+		"fi\0"
 
 #ifndef CONFIG_FSPI_NOR_BOOTFLOW
 #define CONFIG_BOOTCOMMAND \
@@ -98,6 +103,7 @@
 	"fi;"
 #else
 #define CONFIG_BOOTCOMMAND \
+	"run get_fit_config;" \
 	"run qspiboot; " \
 	"echo !!!  QSPI boot failed; " \
 	"run bootcmd_mfg; "
