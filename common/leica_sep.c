@@ -39,6 +39,7 @@ static int leica_sep_transfer(struct leica_sep_funcs *f, char *cmd,
 	while(cmd[cmd_length] != ':' && cmd[cmd_length] != '\0')
 		cmd_length++;
 
+	f->puts("\r\n");
 	f->puts(cmd);
 	cmd[1] = 'R';
 	while(get_timer(0) < (start + timeout_ms))
@@ -149,6 +150,7 @@ int leica_sep_send_ack(struct leica_sep_funcs *f, int boot_src)
 			return -1;
 	}
 
+	f->puts("\r\n");
 	f->puts(data);
 
 	return 0;
