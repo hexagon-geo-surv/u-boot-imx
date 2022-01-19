@@ -28,7 +28,8 @@ static int leica_sep_transfer(struct leica_sep_funcs *f, char *cmd,
 {
 	size_t bytes_received = 0;
 	ulong start = get_timer(0);
-	int cmd_length = 0, command_received = 0;
+	int cmd_length = 0;
+	bool header_received = false, command_received = false;
 
 	if(!f || !f->puts || !f->tstc || !f->getc || !cmd || !data)
 		return -1;
@@ -59,14 +60,18 @@ static int leica_sep_transfer(struct leica_sep_funcs *f, char *cmd,
 		if (data[bytes_received] == '\n' &&
 		    bytes_received >= 1 &&
 		    data[bytes_received - 1] == '\r') {
-			bytes_received--;
-
-			if (bytes_received >= 2 &&
-			    data[bytes_received - 2] == '"')
+			if (header_received) {
 				bytes_received--;
 
-			command_received = 1;
-			break;
+				if (bytes_received >= 2 &&
+				    data[bytes_received - 2] == '"')
+					bytes_received--;
+
+				command_received = true;
+				break;
+			}
+
+			bytes_received = 0;
 		}
 
 		if (data[bytes_received] == ':') {
@@ -74,9 +79,10 @@ static int leica_sep_transfer(struct leica_sep_funcs *f, char *cmd,
 			 * than cmd (including the CRC), this is why cmd_length
 			 * is used for the comparison
 			 */
-			if (bytes_received < cmd_length ||
-			    strncmp(data, cmd, cmd_length))
-				return -1;
+			if (bytes_received >= cmd_length - 1 &&
+			    !strncmp(data, cmd, cmd_length))
+				header_received = true;
+
 			bytes_received = 0;
 			continue;
 		}
