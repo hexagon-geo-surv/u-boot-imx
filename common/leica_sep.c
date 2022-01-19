@@ -53,7 +53,7 @@ static int leica_sep_transfer(struct leica_sep_funcs *f, char *cmd,
 			continue;
 
 		if (size <= bytes_received)
-			return -1;
+			break;
 
 		data[bytes_received] = f->getc();
 
