@@ -39,6 +39,10 @@ static int leica_sep_transfer(struct leica_sep_funcs *f, char *cmd,
 	while(cmd[cmd_length] != ':' && cmd[cmd_length] != '\0')
 		cmd_length++;
 
+	/* Empty receiver FIFO before sending our command*/
+	while(f->tstc())
+		f->getc();
+
 	f->puts("\r\n");
 	f->puts(cmd);
 	cmd[1] = 'R';
