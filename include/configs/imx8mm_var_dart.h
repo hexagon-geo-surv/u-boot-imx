@@ -87,10 +87,12 @@
 		"bootm ${initrd_addr}#${fit_config};\0" \
 	"swu=1\0" \
 	"get_fit_config=leica_mcu_comm board_id board_id;" \
-		"if test \"${board_id}\" < \"D\"; then" \
-		"    echo !!! ERROR: Board with ID ${board_id} is not supported;" \
-		"else" \
-		"    env set fit_config conf-freescale_ap20.dtb;" \
+		"if test \"${board_id}\" < \"D\"; then " \
+		    "echo !!! ERROR: Board with ID ${board_id} is not supported; " \
+		"elif test -n \"${downgrade_dtb}\"; then " \
+		    "env set fit_config conf-freescale_${downgrade_dtb}; " \
+		"else " \
+		    "env set fit_config conf-freescale_ap20.dtb; " \
 		"fi\0"
 
 #ifndef CONFIG_FSPI_NOR_BOOTFLOW
